@@ -19,6 +19,7 @@ import { applyRouterMiddleware, Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import useScroll from 'react-router-scroll';
 import configureStore from './store';
+import {configure} from 'redux-auth';
 
 // Import the CSS reset, which HtmlWebpackPlugin transfers to the build folder
 import 'sanitize.css/sanitize.css';
@@ -38,28 +39,52 @@ const history = syncHistoryWithStore(browserHistory, store, {
   selectLocationState: selectLocationState(),
 });
 
+// Needed for onTouchTap
+import injectTapEventPlugin from 'react-tap-event-plugin';
+injectTapEventPlugin();
+
 // Set up the router, wrapping all Routes in the App component
 import App from 'containers/App';
 import createRoutes from './routes';
-const rootRoute = {
-  component: App,
-  childRoutes: createRoutes(store),
-};
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 
-ReactDOM.render(
-  <Provider store={store}>
-    <Router
-      history={history}
-      routes={rootRoute}
-      render={
-        // Scroll to top when going to a new page, imitating default browser
-        // behaviour
-        applyRouterMiddleware(useScroll())
-      }
-    />
-  </Provider>,
-  document.getElementById('app')
-);
+const [isServer, cookies, currentLocation] = [false, '', ''];
+
+//Note that this doesn't work when wrapped in a function -> says it can't find 'then' of undefined
+store.dispatch(configure(
+  // use the FULL PATH to your API
+  {apiUrl: "http://api.catfancy.com"},
+  {isServer, cookies, currentLocation}
+)).then(({redirectPath, blank} = {}) => {
+  if (blank) {
+    // if `blank` is true, this is an OAuth redirect and should not
+    // be rendered
+    return <noscript />;
+  } else {
+    const rootRoute = {
+      component: App,
+      childRoutes: createRoutes(store),
+    };
+  
+    const reactRoot = document.getElementById('app');
+    const appComponent = (
+      <MuiThemeProvider>
+        <Provider store={store}>
+          <Router
+            history={history}
+            routes={rootRoute}
+            render={
+              // Scroll to top when going to a new page, imitating default browser
+              // behaviour
+              applyRouterMiddleware(useScroll())
+            }
+          />
+        </Provider>
+      </MuiThemeProvider>
+    );
+    ReactDOM.render(appComponent, reactRoot);
+  }
+});
 
 // Install ServiceWorker and AppCache in the end since
 // it's not most important operation and if main code fails,

@@ -10,12 +10,17 @@
  */
 
 import React from 'react';
+// material ui theme 
+import { OAuthSignInButton } from 'redux-auth/material-ui-theme';
 
 export default class HomePage extends React.Component { // eslint-disable-line react/prefer-stateless-function
-
+  //uncomment the OAuthSignInButton to see the issue
   render() {
     return (
-      <h1>This is the Homepage!</h1>
+      <div>
+        <h1>This is the Homepage!</h1>
+        {/*<OAuthSignInButton provider='github' endpoint='www.google.com'/>*/}
+      </div>
     );
   }
 }

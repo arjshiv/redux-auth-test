@@ -7,6 +7,13 @@ import { combineReducers } from 'redux-immutable';
 import { fromJS } from 'immutable';
 import { LOCATION_CHANGE } from 'react-router-redux';
 
+import { authStateReducer } from 'redux-auth';
+import Immutable from 'immutable';
+
+const auth = (state = {}, action) => { //otherwise this reducer doesn't work with redux-immutable
+  return authStateReducer(Immutable.fromJS(state), action);
+};
+
 /*
  * routeReducer
  *
@@ -40,6 +47,7 @@ function routeReducer(state = routeInitialState, action) {
  */
 export default function createReducer(asyncReducers) {
   return combineReducers({
+    auth,
     route: routeReducer,
     ...asyncReducers,
   });
